@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>hdm.mov</title>
+  <meta name="description" content="hdm.mov: videos made with ai. a tv to watch, play with and request channels." />
+  <meta name="theme-color" content="#000000" />
+  <!-- Marca: la hiena de hdm.mov (kit en ~/Desktop/HDM MOV/Logo/hdm-hiena-kit; versiones web en public/brand) -->
+  <link rel="icon" href="./favicon.png" type="image/png" sizes="64x64" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+  <!-- Vista previa al compartir el link (WhatsApp, IG, X). En ingles, el idioma predeterminado.
+       La imagen necesita la direccion completa: el build la arma con SITE_URL (ver vite.config.js) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="hdm.mov" />
+  <meta property="og:title" content="hdm.mov · videos made with ai" />
+  <meta property="og:description" content="a tv full of ai-made videos. zap through the channels, play with the picture and request your own." />
+  <meta property="og:image" content="https://mdcastro1995-dot.github.io/hdm-mov/og.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="a caveman in a yellow puffer jacket next to his cave painting, on the hdm.mov tv" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;700;900&family=VT323&display=swap" rel="stylesheet" />
+  <script type="module" crossorigin src="./assets/index-DIgfdlNr.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-Cqrqsmac.css">
+</head>
+<body data-style="normal">
+  <div class="screen" id="screen">
+    <canvas id="fill" aria-hidden="true"></canvas>
+    <video id="tv" playsinline muted preload="auto"></video>
+    <video id="next" playsinline muted preload="auto" aria-hidden="true"></video>
+    <video id="prev" playsinline muted preload="auto" aria-hidden="true"></video>
+    <canvas id="static" aria-hidden="true"></canvas>
+    <!-- Capas de los estilos de transmision (vhs, cine, en vivo, camara de seguridad...) -->
+    <div class="fx" aria-hidden="true">
+      <i class="fx-scan"></i><i class="fx-grain"></i><i class="fx-vig"></i><i class="fx-bars"></i>
+      <span class="fx-tl" id="fxTL"></span><span class="fx-br" id="fxBR"></span>
+      <div class="fx-ticker"><span id="fxTicker"></span></div>
+    </div>
+  </div>
+  <div class="shade" aria-hidden="true"></div>
+
+  <header class="top">
+    <button class="logo" id="logo" type="button" aria-label="Qué es hdm.mov"><img src="./brand/avatar.png" alt="" width="34" height="34" />hdm.mov</button>
+    <!-- En el celular la barra se parte en dos filas: redes y contacto junto al logo, botones de la tele debajo -->
+    <div class="top-right">
+      <div class="tv-btns">
+        <button type="button" id="sound" class="pill" aria-pressed="false">sonido: no</button>
+        <button type="button" id="remoteBtn" class="pill" data-i18n="remote">control</button>
+        <button type="button" id="guideBtn" class="pill" data-i18n="guide">guía</button>
+        <button type="button" id="langBtn" class="pill lang"></button>
+      </div>
+      <div class="me-btns">
+        <nav class="links" id="links" aria-label="Redes"></nav>
+        <button type="button" class="social contact-btn" id="contactBtn" aria-label="Contacto" title="Contacto">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Control remoto: botones, numeros, sintonia, perillas de imagen, colores, estilos y efectos -->
+  <aside class="remote" id="remote" hidden aria-label="Control remoto">
+    <div class="remote-head">
+      <b data-i18n="remoteTitle">control remoto</b>
+      <span class="remote-ch" id="remoteCh"></span>
+      <button type="button" class="r-btn" id="remoteClose" aria-label="Cerrar">×</button>
+    </div>
+    <div class="r-row r-main">
+      <button type="button" class="r-btn power" data-act="power" aria-label="Encender o apagar">⏻</button>
+      <button type="button" class="r-btn" data-act="mute" data-i18n="rMute">mute</button>
+      <button type="button" class="r-btn" data-act="prev">CH −</button>
+      <button type="button" class="r-btn" data-act="next">CH +</button>
+    </div>
+    <!-- En el celular las secciones van en pestañas (una a la vez) para que el control no tape la tele;
+         en la compu se ven todas juntas como siempre -->
+    <nav class="r-tabs" aria-label="Secciones del control">
+      <button type="button" data-tab="channels" data-i18n="rChannels">canales</button>
+      <button type="button" data-tab="picture" data-i18n="rPicture">imagen</button>
+      <button type="button" data-tab="modes" data-i18n="rModes">modos</button>
+      <button type="button" data-tab="effects" data-i18n="rEffects">efectos</button>
+    </nav>
+    <section class="r-sec" data-sec="channels">
+    <div class="keypad">
+      <button type="button" class="r-btn" data-digit="1">1</button><button type="button" class="r-btn" data-digit="2">2</button><button type="button" class="r-btn" data-digit="3">3</button><button type="button" class="r-btn" data-digit="4">4</button><button type="button" class="r-btn" data-digit="5">5</button>
+      <button type="button" class="r-btn" data-digit="6">6</button><button type="button" class="r-btn" data-digit="7">7</button><button type="button" class="r-btn" data-digit="8">8</button><button type="button" class="r-btn" data-digit="9">9</button><button type="button" class="r-btn" data-digit="0">0</button>
+    </div>
+    <label class="r-slider tune"><span data-i18n="rTune">sintonía</span><input type="range" id="tuneDial" min="1" max="4" step="0.01" value="1" /></label>
+    </section>
+    <section class="r-sec" data-sec="picture">
+    <p class="r-label" data-i18n="rPicture">imagen</p>
+    <label class="r-slider"><span data-i18n="rHue">color</span><input type="range" id="hue" min="-180" max="180" value="0" /></label>
+    <label class="r-slider"><span data-i18n="rSat">intensidad</span><input type="range" id="sat" min="0" max="250" value="100" /></label>
+    <label class="r-slider"><span data-i18n="rBright">brillo</span><input type="range" id="bright" min="40" max="160" value="100" /></label>
+    <label class="r-slider"><span data-i18n="rContrast">contraste</span><input type="range" id="contrast" min="40" max="200" value="100" /></label>
+    <div class="swatches" id="swatches"></div>
+    </section>
+    <section class="r-sec" data-sec="modes">
+    <p class="r-label" data-i18n="rModes">modos</p>
+    <div class="modes" id="modes"></div>
+    </section>
+    <section class="r-sec" data-sec="effects">
+    <p class="r-label" data-i18n="rEffects">efectos</p>
+    <div class="r-row wrap">
+      <button type="button" class="r-btn" data-act="slow" data-i18n="rSlow">lento</button>
+      <button type="button" class="r-btn" data-act="fast" data-i18n="rFast">rápido</button>
+      <button type="button" class="r-btn" data-act="mirror" data-i18n="rMirror">espejo</button>
+      <button type="button" class="r-btn" data-act="zoom">zoom</button>
+      <button type="button" class="r-btn" data-act="random" data-i18n="rRandom">al azar</button>
+      <button type="button" class="r-btn" data-act="zap" data-i18n="rZap">zapping loco</button>
+    </div>
+    <div class="r-row wrap">
+      <button type="button" class="r-btn danger" data-act="break" data-i18n="rBreak">romper la tele</button>
+      <button type="button" class="r-btn" data-act="reset">normal</button>
+    </div>
+    </section>
+  </aside>
+
+  <!-- Canal que todavia no existe: placa de "proximamente" con la idea del visitante -->
+  <div class="soon" id="soon" hidden>
+    <i class="fx-grain"></i>
+    <div class="soon-card">
+      <p class="soon-tag"><span class="ch">CH ??</span> <span data-i18n="soonTag">próximamente en hdm.mov</span></p>
+      <h2 id="soonTitle"></h2>
+      <p class="soon-text" data-i18n="soonText">un canal hecho con ia, a pedido. todavía no existe: puede ser tuyo.</p>
+      <div class="soon-actions">
+        <button type="button" class="pill big" id="soonMake" data-i18n="soonMake">hacelo realidad</button>
+        <button type="button" class="pill" id="soonBack" data-i18n="backTv">← volver a la tele</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Numero de canal en pantalla, como en una tele (al tipear numeros) -->
+  <p class="osd" id="osd" aria-hidden="true"></p>
+  <!-- Tele rota: aviso grande en el centro, para que se entienda que es un juego y hay que pegarle -->
+  <p class="hit-hint" id="hitHint" aria-live="polite"></p>
+
+  <div class="bottom">
+    <section class="caption" id="caption">
+      <!-- Invitacion al sonido: la tele arranca muda (lo exige el navegador); se va al elegir sonido -->
+      <button type="button" class="sound-ask" id="soundAsk" hidden><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span id="soundAskText">ver con sonido</span></button>
+      <div class="meta"><span class="ch" id="ch">CH 01</span><span class="kind" id="kind"></span><a class="kind watch" id="watchOn" target="_blank" rel="noopener"></a></div>
+      <h1 id="title"></h1>
+      <div class="progress"><i id="bar"></i></div>
+    </section>
+
+    <section class="chat" id="chat" aria-label="Chat con la tele">
+      <ol class="log" id="log" aria-live="polite"></ol>
+      <div class="quick" id="quick"></div>
+      <form class="prompt" id="prompt" autocomplete="off">
+        <label for="q" class="sr" data-i18n="askLabel">Escribile a la tele</label>
+        <input id="q" placeholder="escribile a la tele…" data-i18n-ph="askPh" enterkeyhint="send" />
+        <button type="submit" aria-label="Enviar">↑</button>
+      </form>
+    </section>
+
+    <nav class="rail" id="rail" aria-label="Canales"></nav>
+  </div>
+
+  <div class="guide" id="guide" hidden>
+    <div class="guide-head">
+      <div><h2 data-i18n="guideTitle">guía de canales</h2><p id="bio"></p></div>
+      <button type="button" class="pill" id="guideClose" data-i18n="close">cerrar</button>
+    </div>
+    <div class="guide-groups" id="grid"></div>
+  </div>
+
+  <article class="about" id="about" hidden>
+    <div class="about-top">
+      <button type="button" class="pill" id="aboutClose" data-i18n="backTv">← volver a la tele</button>
+      <nav class="links" id="aboutLinks" aria-label="Redes"></nav>
+    </div>
+    <h2 class="about-title"><img src="./brand/avatar.png" alt="" width="240" height="240" />hdm.mov</h2>
+    <p class="about-lead" data-i18n="aboutLead">videos hechos con ia.</p>
+    <p class="about-text" data-i18n="aboutText">hago videos con inteligencia artificial: personajes, lugares y escenas que no se pueden filmar, con el look de algo grabado de verdad. esta tele junta lo que voy haciendo y se puede ver, pedir y jugar.</p>
+
+    <ul class="about-stats">
+      <li><b id="statChannels">32</b> <span data-i18n="statChannels">canales en la tele</span></li>
+      <li><b id="statShorts">4</b> <span data-i18n="statShorts">cortos completos</span></li>
+      <li><b>+150</b> <span data-i18n="statGens">generaciones</span></li>
+    </ul>
+
+    <h3 data-i18n="onNow">en la tele ahora</h3>
+    <p class="about-series" data-i18n="series"><b>pokémon en latinoamérica.</b> personajes de videojuego viviendo el día a día de la región: un asado en el barrio, una noche en méxico y un día de playa en brasil.<br /><br /><b>cavernícola.</b> un spot: un cavernícola consigue una campera amarilla, sale al frío y termina pintado en la pared de la cueva.</p>
+
+    <h3 data-i18n="howTitle">cómo se hace</h3>
+    <ol class="about-steps" data-i18n="steps">
+      <li><b>la idea.</b> un personaje, un lugar y algo que pasa.</li>
+      <li><b>el cuadro.</b> genero la imagen clave: la luz, el lugar, la gente.</li>
+      <li><b>el movimiento.</b> clips de 5 a 10 segundos. se repiten hasta que salen bien.</li>
+      <li><b>el corte.</b> sonido, montaje y color, y sale al canal.</li>
+    </ol>
+
+    <h3 data-i18n="funTitle">qué podés hacer en la tele</h3>
+    <ul class="about-fun" id="aboutFun"></ul>
+
+    <div class="about-cta">
+      <p data-i18n="ctaText">¿querés tu marca, tu idea o tu personaje en uno de estos?</p>
+      <button type="button" class="pill big" id="aboutContact" data-i18n="ctaBtn">hablemos</button>
+    </div>
+  </article>
+
+  <article class="contact" id="contact" hidden>
+    <div class="about-top">
+      <button type="button" class="pill" id="contactClose" data-i18n="backTv">← volver a la tele</button>
+      <nav class="links" id="contactLinks" aria-label="Redes"></nav>
+    </div>
+    <p class="eyebrow" data-i18n="contactEyebrow">contacto</p>
+    <h2 data-i18n="contactTitle">¿hacemos algo?</h2>
+    <p class="contact-text" data-i18n="contactText">marcas, artistas, agencias o una idea suelta. contame qué querés ver y lo armamos con ia.</p>
+    <label class="brief">
+      <span data-i18n="briefLabel">tu idea</span>
+      <textarea id="brief" rows="4" placeholder="quiero un video para…" data-i18n-ph="briefPh"></textarea>
+    </label>
+    <div class="contact-actions">
+      <a class="pill big" id="briefSend" href="#" target="_blank" rel="noopener" data-i18n="briefSend">enviar por mail</a>
+      <a class="mail" id="mail" href="#" target="_blank" rel="noopener"></a>
+    </div>
+  </article>
+
+</body>
+</html>
